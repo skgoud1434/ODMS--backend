@@ -13,7 +13,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 
-FROM openjdk:17-jdk-slim
+FROM maven:3.8.6-openjdk-17
 
 
 WORKDIR /app

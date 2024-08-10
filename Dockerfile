@@ -5,8 +5,9 @@ FROM openjdk:17-jdk-alpine
 WORKDIR /app
 
 # Copy the project's pom.xml and download the dependencies
-COPY pom.xml .
-RUN ./mvnw dependency:resolve
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw && ./mvnw dependency:resolve
 
 # Copy the rest of the project files to the container
 COPY . .

@@ -1,26 +1,21 @@
-# Stage 1: Build the application
-FROM maven:3.8.6-openjdk-17 AS build
+# Use an official OpenJDK runtime as a parent image
+FROM openjdk:17-jdk-alpine
 
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the pom.xml and download dependencies
+# Copy the project's pom.xml and download the dependencies
 COPY pom.xml .
-RUN mvn dependency:go-offline
+RUN ./mvnw dependency:resolve
 
-# Copy the source code and build the application
-COPY src ./src
-RUN mvn clean package -DskipTests
+# Copy the rest of the project files to the container
+COPY . .
 
-# Stage 2: Create the runtime image
-FROM openjdk:17-jdk-slim
+# Package the application
+RUN ./mvnw package -DskipTests
 
-WORKDIR /app
-
-# Copy the jar from the build stage
-COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose port 8080
+# Expose the application port
 EXPOSE 8080
 
-# Define the entry point
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the Spring Boot application
+CMD ["java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]

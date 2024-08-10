@@ -1,25 +1,22 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:17-jdk-alpine
-
-# Set the working directory inside the container
+# Importing JDK and copying required files
+FROM openjdk:19-jdk AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src src
 
-# Copy the Maven wrapper and make it executable
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN chmod +x mvnw
+# Copy Maven wrapper
+COPY mvnw .
+COPY .mvn .mvn
 
-# Download dependencies
-RUN ./mvnw dependency:resolve
+# Set execution permission for the Maven wrapper
+RUN chmod +x ./mvnw
+RUN ./mvnw clean package -DskipTests
 
-# Copy the rest of the project files to the container
-COPY . .
+# Stage 2: Create the final Docker image using OpenJDK 19
+FROM openjdk:19-jdk
+VOLUME /tmp
 
-# Package the application
-RUN ./mvnw package -DskipTests
-
-# Expose the application port
+# Copy the JAR from the build stage
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
 EXPOSE 8080
-
-# Run the Spring Boot application
-CMD ["java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]
